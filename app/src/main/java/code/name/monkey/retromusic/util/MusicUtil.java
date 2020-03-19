@@ -49,8 +49,16 @@ import code.name.monkey.retromusic.loaders.SongLoader;
 import code.name.monkey.retromusic.model.Artist;
 import code.name.monkey.retromusic.model.Playlist;
 import code.name.monkey.retromusic.model.Song;
-import code.name.monkey.retromusic.model.lyrics.AbsSynchronizedLyrics;
+import code.name.monkey.retromusic.rest.MakeItPersonalLyricsRestClient;
 import code.name.monkey.retromusic.service.MusicService;
+import retrofit2.Call;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
+import java.util.Locale;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.FieldKey;
 
 
 public class MusicUtil {
@@ -209,59 +217,43 @@ public class MusicUtil {
     }
 
     @Nullable
-    public static String getLyrics(@NonNull Song song) {
+    public static String getLyrics(@NonNull Song song, Context context) {
         String lyrics = null;
 
         File file = new File(song.getData());
 
         try {
-            lyrics = AudioFileIO.read(file).getTagOrCreateDefault().getFirst(FieldKey.LYRICS);
+            String lyricsTmp = AudioFileIO.read(file).getTagOrCreateDefault().getFirst(FieldKey.COMMENT);
+            lyrics = lyricsTmp;
+//            if (!lyricsTmp.trim().isEmpty()) {
+//                for (String s : lyricsTmp.split("\n")) {
+//                    lyrics += (s.replaceAll("^\\[[\\d\\.]+\\]", "")) + "\n";
+//                }
+//            }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        if (lyrics == null || lyrics.trim().isEmpty() || !AbsSynchronizedLyrics
-                .isSynchronized(lyrics)) {
-            File dir = file.getAbsoluteFile().getParentFile();
+        if ((lyrics == null || lyrics.trim().isEmpty()) && !song.getArtistName().isEmpty() && !song.getTitle().isEmpty()) {
+            try {
+                Call<String> lyricsCall = new MakeItPersonalLyricsRestClient(context).getApiService().lyrics(song.getArtistName().toLowerCase(), song.getTitle().toLowerCase());
+                lyrics = lyricsCall.execute().body();
+            } catch (Exception callError) {
 
-            if (dir != null && dir.exists() && dir.isDirectory()) {
-                String format = ".*%s.*\\.(lrc|txt)";
-                String filename = Pattern.quote(FileUtil.stripExtension(file.getName()));
-                String songtitle = Pattern.quote(song.getTitle());
-
-                final ArrayList<Pattern> patterns = new ArrayList<>();
-                patterns.add(Pattern.compile(String.format(format, filename),
-                        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
-                patterns.add(Pattern.compile(String.format(format, songtitle),
-                        Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
-
-                File[] files = dir.listFiles(f -> {
-                    for (Pattern pattern : patterns) {
-                        if (pattern.matcher(f.getName()).matches()) {
-                            return true;
-                        }
-                    }
-                    return false;
-                });
-
-                if (files != null && files.length > 0) {
-                    for (File f : files) {
-                        try {
-                            String newLyrics = FileUtil.read(f);
-                            if (newLyrics != null && !newLyrics.trim().isEmpty()) {
-                                if (AbsSynchronizedLyrics.isSynchronized(newLyrics)) {
-                                    return newLyrics;
-                                }
-                                lyrics = newLyrics;
-                            }
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
             }
         }
 
+        return lyrics;
+    }
+
+    public static String getInternetLyrics(@NonNull Song song, Context context) {
+        String lyrics = null;
+        try {
+            Call<String> lyricsCall = new MakeItPersonalLyricsRestClient(context).getApiService().lyrics(song.getArtistName().toLowerCase(), song.getTitle().toLowerCase());
+            lyrics = lyricsCall.execute().body();
+        } catch (Exception callError) {
+
+        }
         return lyrics;
     }
 

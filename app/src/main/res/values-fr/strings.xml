@@ -777,4 +777,5 @@
 
     <string name="your_account_data_is_only_used_for_authentication">Vos données de compte sont utilisées uniquement pour vous authentifier.</string>
     <string name="label_more_from">More from %s</string>
+    <string name="download">Download</string>
 </resources>

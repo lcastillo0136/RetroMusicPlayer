@@ -24,11 +24,17 @@
         android:layout_height="match_parent"
         android:background="@drawable/shadow_up_full_theme" />
 
-
+<androidx.constraintlayout.widget.ConstraintLayout
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
     <LinearLayout
+        android:id="@+id/playbackControlsFragmentContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         android:orientation="vertical">
 
         <fragment
@@ -44,8 +50,12 @@
     <LinearLayout
         android:id="@+id/toolbar_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/playbackControlsFragmentContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
         <FrameLayout
             android:layout_width="match_parent"
@@ -117,40 +127,50 @@
 
         </com.google.android.material.appbar.MaterialToolbar>
 
-        <FrameLayout
-            android:id="@+id/player_lyrics"
+        <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:alpha="0"
-            android:clipToPadding="false"
-            android:elevation="20dp"
-            android:padding="16dp"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:layout_height="match_parent">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/player_lyrics_line1"
+            <FrameLayout
+                android:id="@+id/player_lyrics"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:shadowColor="@color/md_black_1000"
-                android:shadowRadius="4"
-                android:textAlignment="center"
-                android:textAppearance="@style/TextViewHeadline6"
-                android:textColor="@color/md_white_1000"
-                android:visibility="gone" />
+                android:alpha="0"
+                android:clipToPadding="false"
+                android:elevation="20dp"
+                android:padding="16dp"
+                android:layout_marginStart="30dp"
+                android:layout_marginEnd="30dp"
+                android:visibility="gone"
+                tools:visibility="visible">
 
-            <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/player_lyrics_line2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:shadowColor="@color/md_black_1000"
-                android:shadowRadius="4"
-                android:textAlignment="center"
-                android:textAppearance="@style/TextViewHeadline6"
-                android:textColor="@color/md_white_1000" />
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/player_lyrics_line1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_horizontal"
+                    android:shadowColor="@color/md_black_1000"
+                    android:shadowRadius="4"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextViewHeadline6"
+                    android:textColor="@color/md_white_1000"
+                    android:visibility="gone" />
 
-        </FrameLayout>
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/player_lyrics_line2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:gravity="center_horizontal"
+                    android:shadowColor="@color/md_black_1000"
+                    android:shadowRadius="4"
+                    android:textAlignment="center"
+                    android:textAppearance="@style/TextViewHeadline6"
+                    android:textColor="@color/md_white_1000" />
+
+            </FrameLayout>
+        </androidx.core.widget.NestedScrollView>
     </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

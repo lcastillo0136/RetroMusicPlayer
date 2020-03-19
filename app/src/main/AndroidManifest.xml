@@ -2,7 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     package="code.name.monkey.retromusic">
-
+    <uses-feature
+        android:name="android.hardware.type.automotive"
+        android:required="true"/>
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -265,5 +267,12 @@
         <meta-data
             android:name="com.android.vending.splits.required"
             android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.car.application"
+            android:resource="@xml/automotive_app_desc"/>
+
+        <!--Used by Android Auto-->
+        <meta-data android:name="com.google.android.gms.car.notification.SmallIcon"
+            android:resource="@mipmap/ic_launcher" />
     </application>
 </manifest>

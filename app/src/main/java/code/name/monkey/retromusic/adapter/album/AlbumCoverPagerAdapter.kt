@@ -1,21 +1,34 @@
 package code.name.monkey.retromusic.adapter.album
 
+import android.graphics.Bitmap
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.annotation.NonNull
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import code.name.monkey.retromusic.R
+import code.name.monkey.retromusic.dialogs.SongDetailDialog
 import code.name.monkey.retromusic.fragments.AlbumCoverStyle
 import code.name.monkey.retromusic.glide.RetroMusicColoredTarget
 import code.name.monkey.retromusic.glide.SongGlideRequest
 import code.name.monkey.retromusic.misc.CustomFragmentStatePagerAdapter
 import code.name.monkey.retromusic.model.Song
+import code.name.monkey.retromusic.util.MusicUtil
 import code.name.monkey.retromusic.util.NavigationUtil
 import code.name.monkey.retromusic.util.PreferenceUtil
 import com.bumptech.glide.Glide
+import org.jaudiotagger.audio.AudioFile
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.audio.exceptions.CannotReadException
+import org.jaudiotagger.audio.exceptions.InvalidAudioFrameException
+import org.jaudiotagger.audio.exceptions.ReadOnlyFileException
+import org.jaudiotagger.tag.TagException
+import java.io.File
+import java.io.IOException
 import java.util.*
 
 class AlbumCoverPagerAdapter(
@@ -117,14 +130,39 @@ class AlbumCoverPagerAdapter(
         }
 
         private fun loadAlbumCover() {
-            SongGlideRequest.Builder.from(Glide.with(requireContext()), song)
-                .checkIgnoreMediaStore(requireContext())
-                .generatePalette(requireContext()).build()
-                .into(object : RetroMusicColoredTarget(albumCover) {
-                    override fun onColorReady(color: Int) {
-                        setColor(color)
+            if (song != null) {
+                val songFile = File(song.data)
+                if (songFile.exists()) {
+                    var hasCover: Boolean = false
+                    try {
+                        val audioFile = AudioFileIO.read(songFile) as AudioFile
+
+
+                    } catch (@NonNull e: CannotReadException) {
+                        Log.e(SongDetailDialog.TAG, "error while reading the song file", e)
+                    } catch (@NonNull e: IOException) {
+                        Log.e(SongDetailDialog.TAG, "error while reading the song file", e)
+                    } catch (@NonNull e: TagException) {
+                        Log.e(SongDetailDialog.TAG, "error while reading the song file", e)
+                    } catch (@NonNull e: ReadOnlyFileException) {
+                        Log.e(SongDetailDialog.TAG, "error while reading the song file", e)
+                    } catch (@NonNull e: InvalidAudioFrameException) {
+                        Log.e(SongDetailDialog.TAG, "error while reading the song file", e)
+                    } finally {
+                        if (!hasCover) {
+                            SongGlideRequest.Builder.from(Glide.with(requireContext()), song)
+                                .checkIgnoreMediaStore(requireContext())
+                                .generatePalette(requireContext()).build()
+                                .into(object : RetroMusicColoredTarget(albumCover) {
+                                    override fun onColorReady(color: Int) {
+                                        setColor(color)
+                                    }
+                                })
+                        }
                     }
-                })
+                }
+            }
+
         }
 
         private fun setColor(color: Int) {

@@ -110,4 +110,5 @@
 
     <string name="home">Ghar</string>
     <string name="label_more_from">More from %s</string>
+    <string name="download">Download</string>
 </resources>

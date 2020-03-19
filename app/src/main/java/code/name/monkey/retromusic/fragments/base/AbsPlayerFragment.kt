@@ -40,9 +40,7 @@ abstract class AbsPlayerFragment : AbsMusicServiceFragment(),
     private var updateLyricsAsyncTask: AsyncTask<*, *, *>? = null
     private var playerAlbumCoverFragment: PlayerAlbumCoverFragment? = null
 
-    override fun onAttach(
-        context: Context
-    ) {
+    override fun onAttach(context: Context) {
         super.onAttach(context)
         try {
             callbacks = context as Callbacks?
@@ -56,9 +54,7 @@ abstract class AbsPlayerFragment : AbsMusicServiceFragment(),
         callbacks = null
     }
 
-    override fun onMenuItemClick(
-        item: MenuItem
-    ): Boolean {
+    override fun onMenuItemClick(item: MenuItem): Boolean {
         val song = MusicPlayerRemote.currentSong
         when (item.itemId) {
             R.id.action_toggle_favorite -> {
@@ -226,10 +222,9 @@ abstract class AbsPlayerFragment : AbsMusicServiceFragment(),
 
             override fun doInBackground(vararg params: Song): Lyrics? {
                 try {
-                    var data: String? =
-                        LyricUtil.getStringFromFile(params[0].title, params[0].artistName)
+                    var data: String? = "" //LyricUtil.getStringFromFile(params[0].title, params[0].artistName)
                     return if (TextUtils.isEmpty(data)) {
-                        data = MusicUtil.getLyrics(params[0])
+                        data = MusicUtil.getLyrics(params[0], context)
                         return if (TextUtils.isEmpty(data)) {
                             null
                         } else {
@@ -287,5 +282,13 @@ abstract class AbsPlayerFragment : AbsMusicServiceFragment(),
             resources.getString(R.string.up_next),
             MusicUtil.getReadableDurationString(duration)
         )
+    }
+
+    protected fun refreshLyrics() {
+        this.updateLyrics()
+    }
+
+    public fun refreshLyrics2() {
+        this.updateLyrics()
     }
 }

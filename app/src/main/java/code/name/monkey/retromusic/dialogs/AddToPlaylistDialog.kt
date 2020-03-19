@@ -36,7 +36,7 @@ class AddToPlaylistDialog : DialogFragment() {
         val playlistNames: MutableList<String> = mutableListOf()
         playlistNames.add(requireContext().resources.getString(R.string.action_new_playlist))
         for (p in playlists) {
-            playlistNames.add(p.name)
+            playlistNames.add(p.name + " - " + p.getSongs(requireContext()).size.toString() + " " + requireContext().resources.getString(R.string.songs))
         }
 
         return MaterialDialog(requireContext(), BottomSheet(LayoutMode.WRAP_CONTENT)).show {

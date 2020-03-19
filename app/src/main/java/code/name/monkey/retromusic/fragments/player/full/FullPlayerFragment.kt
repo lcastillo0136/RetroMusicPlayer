@@ -1,6 +1,7 @@
 package code.name.monkey.retromusic.fragments.player.full
 
 import android.app.ActivityOptions
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -42,12 +43,30 @@ class FullPlayerFragment : AbsPlayerFragment(), MusicProgressViewUpdateHelper.Ca
     override fun onUpdateProgressViews(progress: Int, total: Int) {
         if (!isLyricsLayoutBound()) return
 
-        if (!isLyricsLayoutVisible()) {
-            hideLyricsLayout()
+//        if (!isLyricsLayoutVisible()) {
+//            hideLyricsLayout()
+//            return
+//        }
+
+        if (lyrics !is AbsSynchronizedLyrics) {
+
+            lyricsLayout.visibility = View.VISIBLE
+            lyricsLayout.alpha = 1f
+            lyricsLine2.visibility = View.VISIBLE
+
+            lyricsLine2.text = lyrics?.text;
+            lyricsLine2.measure(
+                View.MeasureSpec.makeMeasureSpec(lyricsLine2.measuredWidth, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.UNSPECIFIED
+            )
+            // lyricsLine2.textSize = 12f
+            val h: Float = lyricsLine2.measuredHeight.toFloat()
+
+            // lyricsLine2.alpha = 0f
+            // lyricsLine2.translationY = h
+            // lyricsLine2.animate().alpha(1f).translationY(0f).duration = VISIBILITY_ANIM_DURATION
             return
         }
-
-        if (lyrics !is AbsSynchronizedLyrics) return
         val synchronizedLyrics = lyrics as AbsSynchronizedLyrics
 
         lyricsLayout.visibility = View.VISIBLE
@@ -105,10 +124,10 @@ class FullPlayerFragment : AbsPlayerFragment(), MusicProgressViewUpdateHelper.Ca
 
         if (!isLyricsLayoutBound()) return
 
-        if (!isLyricsLayoutVisible()) {
-            hideLyricsLayout()
-            return
-        }
+//        if (!isLyricsLayoutVisible()) {
+//            hideLyricsLayout()
+//            return
+//        }
 
         lyricsLine1.text = null
         lyricsLine2.text = null
@@ -149,9 +168,23 @@ class FullPlayerFragment : AbsPlayerFragment(), MusicProgressViewUpdateHelper.Ca
         setUpPlayerToolbar()
         setupArtist()
         nextSong.isSelected = true
-
+        nextSongLabel.setOnClickListener {
+            NavigationUtil.goToPlayingQueue(requireActivity())
+        }
+        nextSong.setOnClickListener {
+            NavigationUtil.goToPlayingQueue(requireActivity())
+        }
         progressViewUpdateHelper = MusicProgressViewUpdateHelper(this, 500, 1000)
         progressViewUpdateHelper.start()
+        lyricsLine2.setOnClickListener {
+            NavigationUtil.goToLyrics(requireActivity())
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == 1) {
+            this.refreshLyrics()
+        }
     }
 
     private fun setupArtist() {
@@ -233,17 +266,20 @@ class FullPlayerFragment : AbsPlayerFragment(), MusicProgressViewUpdateHelper.Ca
     }
 
     private fun updateArtistImage() {
-        CoroutineScope(Dispatchers.IO).launch {
-            val artist =
-                ArtistLoader.getArtist(requireContext(), MusicPlayerRemote.currentSong.artistId)
-            withContext(Dispatchers.Main) {
-                ArtistGlideRequest.Builder.from(Glide.with(requireContext()), artist)
-                    .generatePalette(requireContext())
-                    .build()
-                    .into(object : RetroMusicColoredTarget(artistImage) {
-                        override fun onColorReady(color: Int) {
-                        }
-                    })
+        if (context != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                val artist = ArtistLoader.getArtist(requireContext(), MusicPlayerRemote.currentSong.artistId)
+                withContext(Dispatchers.Main) {
+                    if (context != null ) {
+                        ArtistGlideRequest.Builder.from(Glide.with(requireContext()), artist)
+                            .generatePalette(requireContext())
+                            .build()
+                            .into(object : RetroMusicColoredTarget(artistImage) {
+                                override fun onColorReady(color: Int) {
+                                }
+                            })
+                    }
+                }
             }
         }
     }

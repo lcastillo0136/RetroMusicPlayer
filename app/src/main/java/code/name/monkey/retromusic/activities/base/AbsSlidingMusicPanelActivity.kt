@@ -362,6 +362,9 @@ abstract class AbsSlidingMusicPanelActivity : AbsMusicServiceActivity(),
         }
     }
 
+    protected fun getPlayerFragment(): AbsPlayerFragment? {
+        return playerFragment
+    }
     /*override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         if (ev?.action == MotionEvent.ACTION_DOWN) {
             if (panelState == BottomSheetBehavior.STATE_EXPANDED) {

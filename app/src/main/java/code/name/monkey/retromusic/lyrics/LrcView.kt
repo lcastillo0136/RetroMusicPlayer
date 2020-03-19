@@ -249,7 +249,6 @@ class LrcView @JvmOverloads constructor(
             return
         }
         val indicatePosition = indicatePosition
-        mTextPaint!!.textSize = mLrcTextSize
         mTextPaint!!.textAlign = Paint.Align.LEFT
         var y = (lrcHeight / 2).toFloat()
         val x = dip2px(context, 16f).toFloat()
@@ -257,8 +256,10 @@ class LrcView @JvmOverloads constructor(
             if (i > 0) {
                 y += (getTextHeight(i - 1) + getTextHeight(i)) / 2 + mLrcLineSpaceHeight
             }
+            mTextPaint!!.textSize = mLrcTextSize
             if (mCurrentLine == i) {
                 mTextPaint!!.color = mCurrentPlayLineColor
+                mTextPaint!!.textSize = (mLrcTextSize*1.4).toFloat()
             } else if (indicatePosition == i && isShowTimeIndicator) {
                 mTextPaint!!.color = mCurrentIndicateLineTextColor
             } else {

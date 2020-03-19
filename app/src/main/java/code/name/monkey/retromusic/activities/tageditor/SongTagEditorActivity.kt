@@ -79,7 +79,7 @@ class SongTagEditorActivity : AbsTagEditorActivity(), TextWatcher {
         fieldKeyValueMap[FieldKey.GENRE] = genreText.text.toString()
         fieldKeyValueMap[FieldKey.YEAR] = yearText.text.toString()
         fieldKeyValueMap[FieldKey.TRACK] = trackNumberText.text.toString()
-        fieldKeyValueMap[FieldKey.LYRICS] = lyricsText.text.toString()
+        fieldKeyValueMap[FieldKey.COMMENT] = lyricsText.text.toString()
         fieldKeyValueMap[FieldKey.ALBUM_ARTIST] = albumArtistText.text.toString()
         fieldKeyValueMap[FieldKey.COMPOSER] = songComposerText.text.toString()
         writeValuesToFiles(fieldKeyValueMap, null)

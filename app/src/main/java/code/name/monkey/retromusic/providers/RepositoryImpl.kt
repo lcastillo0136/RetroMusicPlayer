@@ -24,6 +24,7 @@ import code.name.monkey.retromusic.loaders.*
 import code.name.monkey.retromusic.model.*
 import code.name.monkey.retromusic.providers.interfaces.Repository
 import code.name.monkey.retromusic.rest.LastFmClient
+import code.name.monkey.retromusic.rest.MakeItPersonalLyricsRestClient
 import code.name.monkey.retromusic.rest.model.LastFmAlbum
 import code.name.monkey.retromusic.rest.model.LastFmArtist
 import java.io.IOException
@@ -253,16 +254,11 @@ class RepositoryImpl @Inject constructor(private val context: Context) : Reposit
         }
     }
 
-    override suspend fun artistInfo(
-        name: String,
-        lang: String?,
-        cache: String?
-    ): Result<LastFmArtist> = safeApiCall(
+    override suspend fun artistInfo(name: String, lang: String?, cache: String?): Result<LastFmArtist> = safeApiCall(
         call = {
             Success(LastFmClient.getApiService().artistInfo(name, lang, cache))
         },
         errorMessage = "Error"
-
     )
 
     override suspend fun albumInfo(

@@ -23,6 +23,7 @@ import android.media.audiofx.AudioEffect;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 
 import org.jetbrains.annotations.NotNull;
@@ -35,6 +36,7 @@ import code.name.monkey.retromusic.activities.DriveModeActivity;
 import code.name.monkey.retromusic.activities.GenreDetailsActivity;
 import code.name.monkey.retromusic.activities.LicenseActivity;
 import code.name.monkey.retromusic.activities.LyricsActivity;
+import code.name.monkey.retromusic.activities.MainActivity;
 import code.name.monkey.retromusic.activities.PlayingQueueActivity;
 import code.name.monkey.retromusic.activities.PlaylistDetailActivity;
 import code.name.monkey.retromusic.activities.PurchaseActivity;
@@ -76,6 +78,13 @@ public class NavigationUtil {
         ActivityCompat.startActivity(activity, intent, options.toBundle());
     }
 
+    public static void goToAlbumOptions(@NonNull Activity activity,
+                                        int albumId) {
+        Intent intent = new Intent(activity, AlbumDetailsActivity.class);
+        intent.putExtra(AlbumDetailsActivity.EXTRA_ALBUM_ID, albumId);
+        ActivityCompat.startActivity(activity, intent, null);
+    }
+
     public static void goToArtist(@NonNull Activity activity, int i) {
         Intent intent = new Intent(activity, ArtistDetailActivity.class);
         intent.putExtra(ArtistDetailActivity.EXTRA_ARTIST_ID, i);
@@ -99,7 +108,7 @@ public class NavigationUtil {
 
     public static void goToLyrics(@NonNull Activity activity) {
         Intent intent = new Intent(activity, LyricsActivity.class);
-        ActivityCompat.startActivity(activity, intent, null);
+        ActivityCompat.startActivityForResult(activity, intent, 101, null);
     }
 
     public static void goToOpenSource(@NonNull Activity activity) {

@@ -16,6 +16,9 @@ package code.name.monkey.retromusic.lyrics;
 
 import android.content.Context;
 
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.tag.FieldKey;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,8 +45,10 @@ public class LrcHelper {
 
     private static final String CHARSET = "utf-8";
     //[03:56.00][03:18.00][02:06.00][01:07.00]原谅我这一生不羁放纵爱自由
-    private static final String LINE_REGEX = "((\\[\\d{2}:\\d{2}\\.\\d{2,3}])+)(.*)";
-    private static final String TIME_REGEX = "\\[(\\d{2}):(\\d{2})\\.(\\d{2,3})]";
+    private static final String LINE_REGEX = "((\\[\\d{1,2}:\\d{1,2}\\.\\d{1,3}])+)(.*)";
+    private static final String LINE_REGEX_OLD = "((\\[\\d{1,4}\\.\\d{1,10}])+)(.*)";
+    private static final String TIME_REGEX = "\\[(\\d{1,2}):(\\d{1,2})\\.(\\d{1,3})]";
+    private static final String TIME_REGEX_OLD = "\\[(\\d{1,4}).(\\d{1,10})]";
 
     public static List<Lrc> parseLrcFromAssets(Context context, String fileName) {
         try {
@@ -58,6 +63,27 @@ public class LrcHelper {
         try {
             return parseInputStream(new FileInputStream(file));
         } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static List<Lrc> parseFromComments(File file) {
+        List<Lrc> lrcs = new ArrayList<>();
+        try {
+            String lyricsTmp = AudioFileIO.read(file).getTagOrCreateDefault().getFirst(FieldKey.COMMENT);
+            String lyrics = "";
+            if (!lyricsTmp.trim().isEmpty()) {
+                for (String s : lyricsTmp.split("\n")) {
+                    List<Lrc> lrcList = parseLrc(s);
+                    if (lrcList != null && lrcList.size() != 0) {
+                        lrcs.addAll(lrcList);
+                    }
+                }
+            }
+            sortLrcs(lrcs);
+            return lrcs;
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;
@@ -112,8 +138,31 @@ public class LrcHelper {
             return null;
         }
         List<Lrc> lrcs = new ArrayList<>();
+
+        Matcher oldMatch = Pattern.compile(LINE_REGEX_OLD).matcher(lrcLine);
+        if (oldMatch.find()) {
+            String time = oldMatch.group(1);
+            String content = oldMatch.group(3);
+            Matcher timeMatcher = Pattern.compile(TIME_REGEX_OLD).matcher(time);
+            if (timeMatcher.find()) {
+                String sec = timeMatcher.group(1);
+                String mil = timeMatcher.group(2);
+                String min = "0";
+                if (Long.parseLong(sec) > 60) {
+                    min =  (Long.parseLong(sec) / 60) + "";
+                    sec = (Long.parseLong(sec) % 60) + "";
+                }
+
+                if (mil.length() > 3) {
+                    mil = mil.substring(0,3);
+                }
+
+                lrcLine = "[" + adjustFormat(Integer.parseInt(min)) + ":" + adjustFormat(Integer.parseInt(sec)) + "." + mil + "] " + content;
+            }
+        }
+
         Matcher matcher = Pattern.compile(LINE_REGEX).matcher(lrcLine);
-        if (!matcher.matches()) {
+        if (!matcher.find()) {
             return null;
         }
 

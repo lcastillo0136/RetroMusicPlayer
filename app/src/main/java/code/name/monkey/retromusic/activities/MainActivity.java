@@ -94,6 +94,8 @@ public class MainActivity extends AbsSlidingMusicPanelActivity
 
     public static final int APP_INTRO_REQUEST = 100;
 
+    public static final int APP_PLAYER_REFRESH = 101;
+
     public static final String EXPAND_PANEL = "expand_panel";
     private final BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -161,6 +163,10 @@ public class MainActivity extends AbsSlidingMusicPanelActivity
             if (!hasPermissions()) {
                 requestPermissions();
             }
+        }
+
+        if (requestCode == APP_PLAYER_REFRESH) {
+            this.getPlayerFragment().refreshLyrics2();
         }
     }
 

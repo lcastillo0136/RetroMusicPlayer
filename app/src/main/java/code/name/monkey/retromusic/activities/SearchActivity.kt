@@ -25,13 +25,19 @@ import code.name.monkey.retromusic.App
 import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.activities.base.AbsMusicServiceActivity
 import code.name.monkey.retromusic.adapter.SearchAdapter
+import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.mvp.presenter.SearchPresenter
 import code.name.monkey.retromusic.mvp.presenter.SearchView
 import code.name.monkey.retromusic.util.RetroUtil
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.android.synthetic.main.activity_search.*
 import java.util.*
+import org.jaudiotagger.audio.AudioFile
+import org.jaudiotagger.audio.AudioFileIO
+import org.jaudiotagger.tag.id3.ID3v23Frame
+import java.io.File
 import javax.inject.Inject
+import kotlin.reflect.typeOf
 import kotlin.collections.ArrayList
 import kotlin.collections.MutableList
 import kotlin.collections.emptyList
@@ -166,6 +172,24 @@ class SearchActivity : AbsMusicServiceActivity(), OnQueryTextListener, TextWatch
     }
 
     override fun showData(data: MutableList<Any>) {
+//        val dataF = data.filter {
+//            query?.let { it1 ->
+//                if (it !is String && it is Song) {
+//                    val audioFileqry = getAudioFile((it as Song).data)
+//                    if(audioFileqry.tag != null) {
+//                        audioFileqry.tag.getFields("TXXX").map { t ->
+//                            var body: String = (t as ID3v23Frame).body.briefDescription
+//                            body.substring(body.indexOf("Text=") + 5).replace("\"", "")
+//                                .replace(";", "")
+//                        }.joinToString().indexOf(it1)
+//                    } else {
+//                        -1
+//                    }
+//                } else {
+//                    1
+//                }
+//            }!! > -1
+//        }
         searchAdapter?.swapDataSet(data)
     }
 
@@ -218,6 +242,14 @@ class SearchActivity : AbsMusicServiceActivity(), OnQueryTextListener, TextWatch
         const val QUERY: String = "query"
 
         private const val REQ_CODE_SPEECH_INPUT = 9002
+    }
+
+    private fun getAudioFile(path: String): AudioFile {
+        return try {
+            AudioFileIO.read(File(path))
+        } catch (e: Exception) {
+            AudioFile()
+        }
     }
 }
 

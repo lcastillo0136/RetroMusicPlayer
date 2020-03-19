@@ -6,10 +6,12 @@ import android.os.Bundle
 import android.view.View
 import android.webkit.MimeTypeMap
 import androidx.fragment.app.Fragment
+import code.name.monkey.retromusic.R
 import code.name.monkey.retromusic.activities.base.AbsMusicServiceActivity
 import code.name.monkey.retromusic.interfaces.MusicServiceEventListener
 import code.name.monkey.retromusic.model.Song
 import code.name.monkey.retromusic.util.RetroUtil
+import kotlinx.android.synthetic.main.activity_search.view.*
 import org.jaudiotagger.audio.AudioFileIO
 import java.io.File
 import java.net.URLEncoder
@@ -89,6 +91,19 @@ open class AbsMusicServiceFragment : Fragment(), MusicServiceEventListener {
             }
         }
         return "-"
+    }
+
+    fun getLyrics(song: Song): String {
+        val file = File(song.data)
+        if (file.exists()) {
+            return try {
+                val audioComments = AudioFileIO.read(File(song.data)).tag.getFirst("COMM")
+                audioComments.split("\n").map { lr -> lr.replace("^\\[[\\d\\.]+\\]".toRegex(), "") }.joinToString("\n")
+            }catch (er: Exception) {
+                getString(R.string.no_lyrics_found)
+            }
+        }
+        return getString(R.string.no_lyrics_found)
     }
 
     private fun getMimeType(url: String): String? {

@@ -2,6 +2,7 @@ package code.name.monkey.retromusic.activities
 
 import android.R.attr
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.res.ColorStateList
 import android.os.AsyncTask
 import android.os.Build
@@ -25,6 +26,7 @@ import code.name.monkey.retromusic.activities.tageditor.WriteTagsAsyncTask
 import code.name.monkey.retromusic.fragments.base.AbsMusicServiceFragment
 import code.name.monkey.retromusic.helper.MusicPlayerRemote
 import code.name.monkey.retromusic.helper.MusicProgressViewUpdateHelper
+import code.name.monkey.retromusic.lyrics.Lrc
 import code.name.monkey.retromusic.lyrics.LrcHelper
 import code.name.monkey.retromusic.lyrics.LrcView
 import code.name.monkey.retromusic.model.Song
@@ -47,8 +49,19 @@ import java.util.*
 import kotlin.collections.ArrayList
 import kotlin.collections.set
 
-class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
-    ViewPager.OnPageChangeListener {
+class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener, ViewPager.OnPageChangeListener, ViewTreeObserver.OnScrollChangedListener {
+
+    override fun onScrollChanged() {
+        if (offlineScrollContainer.scrollY > offsetY) {
+            download.shrink()
+            fab.shrink()
+        } else if (offlineScrollContainer.scrollY < offsetY) {
+            download.extend()
+            fab.extend()
+        }
+        offsetY = offlineScrollContainer.scrollY
+    }
+
     override fun onPageScrollStateChanged(state: Int) {
         when (state) {
             ViewPager.SCROLL_STATE_IDLE -> fab.show()
@@ -63,7 +76,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
     override fun onPageSelected(position: Int) {
         PreferenceUtil.getInstance(this).lyricsOptions = position
         if (position == 0) fab.text = getString(R.string.synced_lyrics)
-        else if (position == 1) fab.text = getString(R.string.lyrics)
+        else if (position == 1) fab.text = getString(R.string.edit)
     }
 
     override fun onClick(v: View?) {
@@ -75,7 +88,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
 
     private lateinit var song: Song
     private var lyricsString: String? = null
-
+    private var offsetY: Int = 0;
     private val googleSearchLrcUrl: String
         get() {
             var baseUrl = "http://www.google.com/search?"
@@ -93,6 +106,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
         setNavigationbarColorAuto()
 
         fab.backgroundTintList = ColorStateList.valueOf(ThemeStore.accentColor(this))
+        download.backgroundTintList = ColorStateList.valueOf(ThemeStore.accentColor(this))
         ColorStateList.valueOf(
             MaterialValueHelper.getPrimaryTextColor(
                 this,
@@ -102,6 +116,8 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             .apply {
                 fab.setTextColor(this)
                 fab.iconTint = this
+                download.setTextColor(this)
+                download.iconTint = this
             }
         setupWakelock()
 
@@ -131,7 +147,14 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
         )
         tabs.setSelectedTabIndicatorColor(ThemeStore.accentColor(this))
 
+        ((viewPager.adapter as PagerAdapter).getItem(viewPager.currentItem) as BaseLyricsFragment).setOnScrollChangedListener(this@LyricsActivity)
+
         fab.setOnClickListener(this)
+        download.setOnClickListener {
+            if (viewPager.currentItem == 1) {
+                ((viewPager.adapter as PagerAdapter).getItem(viewPager.currentItem) as OfflineLyricsFragment).refreshLyrics()
+            }
+        }
     }
 
     override fun onPlayingMetaChanged() {
@@ -156,8 +179,9 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
+            setResult(Activity.RESULT_OK)
             finish()
-            return true
+            //return true
         }
         return super.onOptionsItemSelected(item)
     }
@@ -193,11 +217,8 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
     }
 
     private fun updateSong() {
-        val page =
-            supportFragmentManager.findFragmentByTag("android:switcher:" + R.id.viewPager + ":" + viewPager.currentItem)
-        if (viewPager.currentItem == 0 && page != null) {
-            (page as BaseLyricsFragment).upDateSong()
-        }
+        val page = supportFragmentManager.findFragmentByTag("android:switcher:" + R.id.viewPager + ":" + viewPager.currentItem)
+        ((viewPager.adapter as PagerAdapter).getItem(viewPager.currentItem) as BaseLyricsFragment).upDateSong()
     }
 
     private fun showLyricsSaveDialog() {
@@ -221,7 +242,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
                 inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_MULTI_LINE
             ) { _, input ->
                 val fieldKeyValueMap = EnumMap<FieldKey, String>(FieldKey::class.java)
-                fieldKeyValueMap[FieldKey.LYRICS] = input.toString()
+                fieldKeyValueMap[FieldKey.COMMENT] = input.toString()
                 WriteTagsAsyncTask(this@LyricsActivity).execute(
                     WriteTagsAsyncTask.LoadingInfo(
                         getSongPaths(song), fieldKeyValueMap, null
@@ -243,7 +264,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
 
     private fun getGoogleSearchUrl(): String {
         var baseUrl = "http://www.google.com/search?"
-        var query = song.title + "+" + song.artistName
+        var query = song.title + " - " + song.artistName
         query = "q=" + query.replace(" ", "+") + " lyrics"
         baseUrl += query
         return baseUrl
@@ -279,8 +300,10 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
         }
     }
 
-    abstract class BaseLyricsFragment : AbsMusicServiceFragment() {
+    abstract class BaseLyricsFragment : AbsMusicServiceFragment(), ViewTreeObserver.OnScrollChangedListener {
         abstract fun upDateSong()
+        abstract fun refreshLyrics()
+        private var listener: ViewTreeObserver.OnScrollChangedListener = ViewTreeObserver.OnScrollChangedListener {  };
 
         override fun onPlayingMetaChanged() {
             super.onPlayingMetaChanged()
@@ -291,11 +314,27 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             super.onServiceConnected()
             upDateSong()
         }
+
+        fun setOnScrollChangedListener(listener: ViewTreeObserver.OnScrollChangedListener) {
+            this.listener = listener
+        }
+
+        override fun onScrollChanged() {
+            if (this.listener != null) {
+                this.listener.onScrollChanged()
+            }
+        }
+
     }
 
     class OfflineLyricsFragment : BaseLyricsFragment() {
         override fun upDateSong() {
             loadSongLyrics()
+        }
+
+        override fun refreshLyrics() {
+            lyrics?.setData(lyrics?.song, "")
+            downloadSongLyrics()
         }
 
         private var updateLyricsAsyncTask: AsyncTask<*, *, *>? = null
@@ -309,7 +348,7 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             val song = MusicPlayerRemote.currentSong
             updateLyricsAsyncTask = object : AsyncTask<Void?, Void?, Lyrics?>() {
                 override fun doInBackground(vararg params: Void?): Lyrics? {
-                    val data = MusicUtil.getLyrics(song)
+                    val data = MusicUtil.getLyrics(song, context)
                     return if (TextUtils.isEmpty(data)) {
                         null
                     } else Lyrics.parse(song, data!!)
@@ -337,9 +376,50 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             }.execute()
         }
 
+        @SuppressLint("StaticFieldLeak")
+        private fun downloadSongLyrics() {
+            if (updateLyricsAsyncTask != null) {
+                updateLyricsAsyncTask!!.cancel(false)
+            }
+            val song = MusicPlayerRemote.currentSong
+            updateLyricsAsyncTask = object : AsyncTask<Void?, Void?, Lyrics?>() {
+                override fun doInBackground(vararg params: Void?): Lyrics? {
+                    val data = MusicUtil.getInternetLyrics(song, context)
+                    return if (TextUtils.isEmpty(data)) {
+                        null
+                    } else Lyrics.parse(song, data!!)
+                }
+
+                override fun onPreExecute() {
+                    super.onPreExecute()
+                    lyrics = null
+                }
+
+                override fun onPostExecute(l: Lyrics?) {
+                    lyrics = l
+                    offlineLyrics?.visibility = View.VISIBLE
+                    if (l == null) {
+                        offlineLyrics?.setText(R.string.no_lyrics_found)
+                        return
+                    }
+                    (activity as LyricsActivity).lyricsString = l.text
+                    offlineLyrics?.text = l.text
+                }
+
+                override fun onCancelled(s: Lyrics?) {
+                    onPostExecute(null)
+                }
+            }.execute()
+        }
+
+        public fun getLyrics(): String? {
+            return lyrics?.text
+        }
+
         override fun onActivityCreated(savedInstanceState: Bundle?) {
             super.onActivityCreated(savedInstanceState)
             loadSongLyrics()
+            offlineScrollContainer.viewTreeObserver.addOnScrollChangedListener(this)
         }
 
         override fun onDestroyView() {
@@ -361,6 +441,10 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             loadLRCLyrics()
         }
 
+        override fun refreshLyrics() {
+            loadLRCLyrics()
+        }
+
         private lateinit var updateHelper: MusicProgressViewUpdateHelper
         override fun onCreateView(
             inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -378,8 +462,10 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
             setupLyricsView()
         }
 
+
         private fun setupLyricsView() {
             lyricsView.apply {
+                setLrcTextSize(40f)
                 setCurrentPlayLineColor(ThemeStore.accentColor(requireContext()))
                 setIndicatorTextColor(ThemeStore.accentColor(requireContext()))
                 setCurrentIndicateLineTextColor(
@@ -414,15 +500,20 @@ class LyricsActivity : AbsMusicServiceActivity(), View.OnClickListener,
         private fun loadLRCLyrics() {
             lyricsView.resetView("Empty")
             val song = MusicPlayerRemote.currentSong
-            if (LyricUtil.isLrcFileExist(song.title, song.artistName)) {
-                showLyricsLocal(LyricUtil.getLocalLyricFile(song.title, song.artistName))
-            }
+
+            var data = LrcHelper.parseFromComments(File(song.data))
+            if (data !== null)
+                lyricsView.setLrcData(data);
+
+            // if (LyricUtil.isLrcFileExist(song.title, song.artistName)) {
+            //    showLyricsLocal(LyricUtil.getLocalLyricFile(song.title, song.artistName))
+            //}
         }
 
         private fun showLyricsLocal(file: File?) {
-            if (file != null) {
+            //if (file != null) {
                 lyricsView.setLrcData(LrcHelper.parseLrcFromFile(file))
-            }
+            //}
         }
     }
 }

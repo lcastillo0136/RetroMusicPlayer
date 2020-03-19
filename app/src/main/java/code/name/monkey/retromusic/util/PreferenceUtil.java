@@ -487,10 +487,10 @@ public final class PreferenceUtil {
         List<CategoryInfo> defaultCategoryInfos = new ArrayList<>(8);
         defaultCategoryInfos.add(new CategoryInfo(Category.HOME, true));
         defaultCategoryInfos.add(new CategoryInfo(Category.SONGS, true));
-        defaultCategoryInfos.add(new CategoryInfo(Category.ALBUMS, true));
+        defaultCategoryInfos.add(new CategoryInfo(Category.ALBUMS, false));
         defaultCategoryInfos.add(new CategoryInfo(Category.ARTISTS, true));
         defaultCategoryInfos.add(new CategoryInfo(Category.PLAYLISTS, true));
-        defaultCategoryInfos.add(new CategoryInfo(Category.GENRES, false));
+        defaultCategoryInfos.add(new CategoryInfo(Category.GENRES, true));
         defaultCategoryInfos.add(new CategoryInfo(Category.QUEUE, false));
         defaultCategoryInfos.add(new CategoryInfo(Category.FOLDER, false));
         return defaultCategoryInfos;

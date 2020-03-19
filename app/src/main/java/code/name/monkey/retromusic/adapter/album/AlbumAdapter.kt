@@ -182,15 +182,14 @@ open class AlbumAdapter(
             if (isInQuickSelectMode) {
                 toggleChecked(adapterPosition)
             } else {
-                val activityOptions = ActivityOptions.makeSceneTransitionAnimation(
-                    activity,
-                    imageContainerCard ?: image,
-                    "${activity.getString(R.string.transition_album_art)}_${dataSet[adapterPosition].id}"
-                )
+//                val activityOptions = ActivityOptions.makeSceneTransitionAnimation(
+//                    activity,
+//                    imageContainerCard ?: imageContainerCard,
+//                    "${activity.getString(R.string.transition_album_art)}_${dataSet[adapterPosition].id}"
+//                )
                 NavigationUtil.goToAlbumOptions(
                     activity,
-                    dataSet[adapterPosition].id,
-                    activityOptions
+                    dataSet[adapterPosition].id
                 )
             }
         }

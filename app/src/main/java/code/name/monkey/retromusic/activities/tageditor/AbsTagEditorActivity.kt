@@ -148,7 +148,7 @@ abstract class AbsTagEditorActivity : AbsBaseActivity() {
     protected val lyrics: String?
         get() {
             return try {
-                getAudioFile(songPaths!![0]).tagOrCreateAndSetDefault.getFirst(FieldKey.LYRICS)
+                getAudioFile(songPaths!![0]).tagOrCreateAndSetDefault.getFirst(FieldKey.COMMENT)
             } catch (ignored: Exception) {
                 null
             }
